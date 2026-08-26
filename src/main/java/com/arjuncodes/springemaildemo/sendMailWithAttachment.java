@@ -1,86 +1,99 @@
 package com.arjuncodes.springemaildemo;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.mail.MailParseException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
-public class sendMailWithAttachment  {
-   @Autowired
-    private JavaMailSender mailSender;
+public class sendMailWithAttachment {
 
-    public void setDataNsendMail(List<String> toEmails, String fromEmail, String bccEmail) {
+    @Value("${BREVO_API_KEY}")
+    private String brevoApiKey;
 
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setFrom(fromEmail);
-        simpleMailMessage.setTo(toEmails.stream()
-                .map(String::trim)
-                .filter(emailId -> !emailId.isBlank())
-                .toArray(String[]::new));
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public void setDataNsendMail(
+            List<String> toEmails,
+            String fromEmail,
+            String bccEmail
+    ) throws Exception {
+
+        List<Map<String, String>> toList = new ArrayList<>();
+
+        for (String email : toEmails) {
+            Map<String, String> recipient = new HashMap<>();
+            recipient.put("email", email);
+            toList.add(recipient);
+        }
+
+        Map<String, Object> sender = new HashMap<>();
+        sender.put("email", fromEmail);
+        sender.put("name", "Spring Mail App");
+
+        Map<String, Object> requestBody = new HashMap<>();
+
+        requestBody.put("sender", sender);
+        requestBody.put("to", toList);
+
+        // Since your UI does not need subject/message,
+        // keep these predefined here.
+        requestBody.put("subject", "Email from Spring Mail App");
+
+        requestBody.put(
+                "htmlContent",
+                "<html><body><p>This email was sent from my Spring Boot web application.</p></body></html>"
+        );
+
         if (bccEmail != null && !bccEmail.isBlank()) {
-            simpleMailMessage.setBcc(bccEmail);
+
+            List<Map<String, String>> bccList = new ArrayList<>();
+
+            Map<String, String> bcc = new HashMap<>();
+            bcc.put("email", bccEmail);
+
+            bccList.add(bcc);
+
+            requestBody.put("bcc", bccList);
         }
 
-        if (simpleMailMessage.getTo() == null || simpleMailMessage.getTo().length == 0) {
-            throw new IllegalArgumentException("At least one toEmail is required");
+        String jsonBody = objectMapper.writeValueAsString(requestBody);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("accept", "application/json")
+                .header("api-key", brevoApiKey)
+                .header("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() < 200 ||
+                response.statusCode() >= 300) {
+
+            throw new RuntimeException(
+                    "Brevo email failed. Status: "
+                            + response.statusCode()
+                            + " Response: "
+                            + response.body()
+            );
         }
 
-        CompanyDetails companyDetails = new CompanyDetails();
-        companyDetails.setCompanyName("you");
-        getMailMessageTextNSub(simpleMailMessage, companyDetails);
-        sendMail(simpleMailMessage, "", "");
-        System.out.println("Email sent to " + simpleMailMessage.getTo().length + " recipients");
-    }
-
-
-    public void sendMail(SimpleMailMessage simpleMailMessage, String dear, String content) {
-        MimeMessage message = mailSender.createMimeMessage();
-        try{
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom(simpleMailMessage.getFrom());
-            helper.setTo(simpleMailMessage.getTo());
-            if (simpleMailMessage.getBcc() != null && simpleMailMessage.getBcc().length > 0) {
-                helper.setBcc(simpleMailMessage.getBcc());
-            }
-            helper.setSubject(simpleMailMessage.getSubject());
-            helper.setText(String.format(simpleMailMessage.getText(), dear, content));
-            String filePath = "C:\\Users\\suman\\Documents\\SMTP Email\\SpringBootEmail-master\\src\\main\\resources\\Sumanth_Java.pdf";
-            FileSystemResource file = new FileSystemResource(filePath);
-            helper.addAttachment(file.getFilename(), file);
-            mailSender.send(message);
-        }catch (MessagingException e) {
-            throw new MailParseException(e);
-        }
-
-
-    }
-
-    private void getMailMessageTextNSub(SimpleMailMessage simpleMailMessage,CompanyDetails companyDetails) {
-        simpleMailMessage.setSubject("Sumanth MVS || Aspiring for \"I-140 2028\" || Java FullStack Microservices Developer");
-        simpleMailMessage.setText("Good morning/evening,\n" +
-                "\n" +
-                "Glad to reach out to "+companyDetails.getCompanyName()+" for requesting I-140 sponsorship."+"\n" +
-                "\n" +
-                "I have been working as a Senior Java FullStack Microservices Developer for the last 5 years.\n" +
-                "Please find my resume attached, and kindly let me know if you'd like to consider my profile for the upcoming I-140 2028 lottery.\n" +
-                "\n" +
-                "Thanks for reading my E-mail, hoping to hearing back from "+companyDetails.getCompanyName()+"."+"\n" +
-                "\n" +
-                "\n" +
-                "Best Regards,\n" +
-                "Sumanth MVS\n" +
-                "+1 6827728043\n" +
-                "\n" +
-                "https://www.linkedin.com/in/sumanth-mvs-softwaredeveloper/\n" +
-                "\n" +
-                "\n");
+        System.out.println(
+                "Email sent successfully through Brevo: "
+                        + response.body()
+        );
     }
 }
