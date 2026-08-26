@@ -17,12 +17,24 @@ public class EmailController {
     private sendMailWithAttachment sendMailWithAttachment;
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendEmails(@RequestBody EmailRequest emailRequest) throws IOException {
-        if (emailRequest.getToEmails() == null || emailRequest.getToEmails().isEmpty()) {
-            return ResponseEntity.badRequest().body("toEmails is required");
+    public ResponseEntity<String> sendEmails(
+            @RequestBody EmailRequest emailRequest
+    ) throws Exception {
+
+        if (emailRequest.getToEmails() == null ||
+                emailRequest.getToEmails().isEmpty()) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body("toEmails is required");
         }
-        if (emailRequest.getFromEmail() == null || emailRequest.getFromEmail().isBlank()) {
-            return ResponseEntity.badRequest().body("fromEmail is required");
+
+        if (emailRequest.getFromEmail() == null ||
+                emailRequest.getFromEmail().isBlank()) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body("fromEmail is required");
         }
 
         sendMailWithAttachment.setDataNsendMail(
@@ -30,6 +42,9 @@ public class EmailController {
                 emailRequest.getFromEmail(),
                 emailRequest.getBccEmail()
         );
-        return ResponseEntity.ok("Emails sent successfully");
+
+        return ResponseEntity.ok(
+                "Emails sent successfully"
+        );
     }
 }
