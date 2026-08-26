@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Mail App</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            width: 420px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        #result {
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Send Email</h2>
+
+    <label>To</label>
+    <input type="email" id="to" placeholder="receiver@gmail.com">
+
+    <label>Subject</label>
+    <input type="text" id="subject" placeholder="Email subject">
+
+    <label>Message</label>
+    <textarea id="message" placeholder="Write your message"></textarea>
+
+    <button onclick="sendEmail()">Send Email</button>
+
+    <div id="result"></div>
+
+</div>
+
+<script>
+
+    async function sendEmail() {
+
+        const emailData = {
+            to: document.getElementById("to").value,
+            subject: document.getElementById("subject").value,
+            message: document.getElementById("message").value
+        };
+
+        const result = document.getElementById("result");
+
+        result.innerText = "Sending...";
+
+        try {
+
+            const response = await fetch("/api/emails/send", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(emailData)
+            });
+
+            if (response.ok) {
+                result.innerText = "Email sent successfully!";
+            } else {
+                result.innerText = "Failed to send email.";
+            }
+
+        } catch (error) {
+
+            result.innerText = "Error sending email.";
+            console.error(error);
+
+        }
+    }
+
+</script>
+
+</body>
+</html>
