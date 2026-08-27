@@ -91,10 +91,7 @@
             placeholder="Optional">
 
     <label>Message</label>
-    <textarea
-            id="message"
-            placeholder="Enter your message"
-            rows="6"></textarea>
+    <textarea id="message" rows="6" placeholder="Enter your message"></textarea>
 
     <button onclick="sendEmail()">Send Email</button>
 
@@ -120,14 +117,14 @@
             .map(email => email.trim())
             .filter(email => email.length > 0);
 
+        const message = document.getElementById("message").value;
+
         const emailData = {
             toEmails: toEmails,
             fromEmail: fromEmail,
-            bccEmail: bccEmail
+            bccEmail: bccEmail,
+            message: message
         };
-
-        const message =
-            document.getElementById("message").value;
 
         const result =
             document.getElementById("result");
