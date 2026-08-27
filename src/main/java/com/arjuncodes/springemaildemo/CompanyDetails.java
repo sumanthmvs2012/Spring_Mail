@@ -22,7 +22,4 @@ public class CompanyDetails {
         this.companyName = companyName;
     }
 
-
-
-
 }

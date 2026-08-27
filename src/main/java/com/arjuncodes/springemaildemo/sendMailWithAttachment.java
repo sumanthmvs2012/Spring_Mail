@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 public class sendMailWithAttachment {
 
-    @Value("${BREVO_API_KEY}")
+    @Value("${brevo.api.key}")
     private String brevoApiKey;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -24,8 +24,9 @@ public class sendMailWithAttachment {
     public void setDataNsendMail(
             List<String> toEmails,
             String fromEmail,
-            String bccEmail
-    ) throws Exception {
+            String bccEmail,
+            String message) throws Exception
+    {
 
         List<Map<String, String>> toList = new ArrayList<>();
 
@@ -50,7 +51,7 @@ public class sendMailWithAttachment {
 
         requestBody.put(
                 "htmlContent",
-                "<html><body><p>This email was sent from my Spring Boot web application.</p></body></html>"
+                "<html><body><p>" + message + "</p></body></html>"
         );
 
         if (bccEmail != null && !bccEmail.isBlank()) {

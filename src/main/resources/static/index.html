@@ -82,13 +82,19 @@
     <input
             type="email"
             id="fromEmail"
-            placeholder="yourgmail@gmail.com">
+            placeholder="your verified Brevo email">
 
     <label>BCC Email</label>
     <input
             type="email"
             id="bccEmail"
             placeholder="Optional">
+
+    <label>Message</label>
+    <textarea
+            id="message"
+            placeholder="Enter your message"
+            rows="6"></textarea>
 
     <button onclick="sendEmail()">Send Email</button>
 
@@ -119,6 +125,9 @@
             fromEmail: fromEmail,
             bccEmail: bccEmail
         };
+
+        const message =
+            document.getElementById("message").value;
 
         const result =
             document.getElementById("result");

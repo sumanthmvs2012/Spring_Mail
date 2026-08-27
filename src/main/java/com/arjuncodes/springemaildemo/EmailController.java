@@ -40,7 +40,8 @@ public class EmailController {
         sendMailWithAttachment.setDataNsendMail(
                 emailRequest.getToEmails(),
                 emailRequest.getFromEmail(),
-                emailRequest.getBccEmail()
+                emailRequest.getBccEmail(),
+                emailRequest.getMessage()
         );
 
         return ResponseEntity.ok(
